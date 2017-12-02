@@ -12,6 +12,7 @@ namespace TamamoSharp
 {
     class Program
     {
+        private DiscordSocketClient _client;
         private IConfiguration _cfg;
 
         static void Main(string[] args)
@@ -19,16 +20,18 @@ namespace TamamoSharp
 
         public async Task MainAsync()
         {
+            _client = new DiscordSocketClient(new DiscordSocketConfig
+            {
+                LogLevel = LogSeverity.Verbose
+            });
+
             _cfg = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("config.json")
                 .Build();
 
             IServiceProvider svc = new ServiceCollection()
-                .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
-                {
-                    LogLevel = LogSeverity.Verbose
-                }))
+                .AddSingleton(_client)
                 .AddSingleton(new CommandService(new CommandServiceConfig
                 {
                     DefaultRunMode = RunMode.Async,
@@ -37,14 +40,15 @@ namespace TamamoSharp
                 .AddSingleton(_cfg)
                 .AddSingleton<CommandHandler>()
                 .AddSingleton<Logger>()
-                .AddSingleton<Start>()
                 .AddSingleton<Random>()
                 .AddLogging()
                 .BuildServiceProvider();
 
             svc.GetRequiredService<Logger>();
-            await svc.GetRequiredService<Start>().StartAsync();
             await svc.GetRequiredService<CommandHandler>().InitializeAsync(svc);
+
+            await _client.LoginAsync(TokenType.Bot, _cfg["tokens:discord"]);
+            await _client.StartAsync();
 
             await Task.Delay(-1);
         }

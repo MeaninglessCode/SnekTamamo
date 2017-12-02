@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TamamoSharp.Module
 {
-    class Conversation : ModuleBase<SocketCommandContext>
+    public class Conversation : ModuleBase<SocketCommandContext>
     {
         private readonly Random _rng;
 
@@ -33,7 +33,7 @@ namespace TamamoSharp.Module
         [Command("scramble")]
         public async Task Scramble(string s)
         {
-            await ReplyAsync(s.OrderBy(_ => Guid.NewGuid()).ToArray().ToString());
+            await ReplyAsync("do it later");
         }
     }
 }
