@@ -22,7 +22,7 @@ namespace TamamoSharp.Services
 
         public async Task StartAsync()
         {
-            await _client.LoginAsync(TokenType.Bot, _cfg["token"]);
+            await _client.LoginAsync(TokenType.Bot, _cfg["tokens:discord"]);
             await _client.StartAsync();
             await _cmds.AddModulesAsync(Assembly.GetEntryAssembly());
         }

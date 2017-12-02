@@ -38,10 +38,4 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Utils\Checks\" />
-    <Folder Include="Utils\Database\Tags\" />
-    <Folder Include="Utils\Database\Quotes\" />
-  </ItemGroup>
-
 </Project>
