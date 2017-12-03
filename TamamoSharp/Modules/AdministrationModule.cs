@@ -18,23 +18,17 @@ namespace TamamoSharp.Modules
             [Command]
             [Priority(0)]
             public async Task PruneSelf(int num = 100)
-            {
-                await DoPrune(Context, x => x.Author == Context.User, num);
-            }
+                => await DoPrune(Context, x => x.Author == Context.User, num);
 
             [Command("user")]
             [Priority(10)]
             public async Task PruneUser(SocketGuildUser user, int num = 100)
-            {
-                await DoPrune(Context, x => x.Author == user, num);
-            }
+                => await DoPrune(Context, x => x.Author == user, num);
 
             [Command("all")]
             [Priority(10)]
             public async Task PruneAll(int num = 100)
-            {
-                await DoPrune(Context, x => true, num);
-            }
+                => await DoPrune(Context, x => true, num);
 
             private async Task DoPrune(SocketCommandContext ctx, Func<IMessage, bool> expr, int count = 100)
             {
@@ -54,11 +48,26 @@ namespace TamamoSharp.Modules
                 }
 
                 int deleted = toDelete.Count();
-
-                if (deleted != 0)
+                List<string> result = new List<string>
                 {
+                    $"{deleted} message{((deleted == 1) ? " was" : "'s were")} pruned!"
+                };
 
+                if (deleted > 0)
+                {
+                    result.Add(" ");
+                    Dictionary<string, int> authors = toDelete.GroupBy(x => $"{x.Author.Username}#{x.Author.Discriminator}")
+                        .ToDictionary(x => x.Key, x => x.Count());
+
+                    foreach (var i in authors)
+                        result.Add($"{i.Key}: {i.Value}");
                 }
+
+                string toSend = string.Join("\n", result);
+                if (toSend.Length > 2000)
+                    await DelayDeleteReplyAsync($"Pruned {deleted} messages!", 5);
+                else
+                    await DelayDeleteReplyAsync(toSend, 5);
             }
         }
 

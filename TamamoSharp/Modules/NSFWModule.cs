@@ -4,7 +4,7 @@ using System.Text;
 
 namespace TamamoSharp.Modules
 {
-    class NSFWModule
+    class NSFWModule : TamamoModuleBase
     {
     }
 }
