@@ -1,12 +1,13 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Discord;
+using TamamoSharp.Database.Quotes;
 using TamamoSharp.Services;
-using Discord.Commands;
 
 namespace TamamoSharp
 {
@@ -41,6 +42,7 @@ namespace TamamoSharp
                 .AddSingleton<CommandHandler>()
                 .AddSingleton<Logger>()
                 .AddSingleton<Random>()
+                .AddSingleton<QuoteDb>()
                 .AddLogging()
                 .BuildServiceProvider();
 

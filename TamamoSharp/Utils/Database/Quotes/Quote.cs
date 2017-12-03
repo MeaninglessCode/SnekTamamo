@@ -14,7 +14,6 @@ namespace TamamoSharp.Database.Quotes
         public ulong GuildId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
-        public List<string> Aliases { get; set; }
-        public int Uses { get; set; }
+        public int Uses { get; set; } = 0;
     }
 }

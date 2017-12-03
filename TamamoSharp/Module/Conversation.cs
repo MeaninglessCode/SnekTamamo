@@ -30,10 +30,18 @@ namespace TamamoSharp.Module
                 await ReplyAsync($"You rolled a {_rng.Next(lower, upper)}!");
         }
 
-        [Command("scramble")]
-        public async Task Scramble(string s)
+        [Command("choose")]
+        public async Task Choose([Remainder] string s)
         {
-            await ReplyAsync("do it later");
+            string[] choices = s.Split(",");
+            if (choices.Count() <= 1)
+                await ReplyAsync("Nothing to choose!");
+            else
+                await ReplyAsync(choices[_rng.Next(0, choices.Count())]);
         }
+
+        [Command("scramble")]
+        public async Task Scramble([Remainder] string s)
+            => await ReplyAsync(String.Join(" ", ((s.Split(" ")).OrderBy(x => _rng.Next())).ToArray()));
     }
 }

@@ -49,7 +49,7 @@ namespace TamamoSharp.Module
                 catch (Discord.Net.HttpException e)
                 {
                     if (e.DiscordCode == 403)
-                        await ctx.Channel.SendMessageAsync($"I don't have permission to do that !");
+                        await ctx.Channel.SendMessageAsync($"I don't have permission to do that!");
                     else
                         await ctx.Channel.SendMessageAsync($"{e}");
                 }
@@ -62,5 +62,14 @@ namespace TamamoSharp.Module
                 }
             }
         }
+
+        [Command("kick")]
+        [RequireBotPermission(GuildPermission.KickMembers)]
+        public async Task Kick(SocketGuildUser user, string reason = null)
+        {
+            await user.KickAsync(reason);
+            await ReplyAsync($"{user.Username} has been kicked.");
+        }
+
     }
 }

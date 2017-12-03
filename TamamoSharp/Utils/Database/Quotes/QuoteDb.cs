@@ -1,7 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace TamamoSharp.Database.Quotes
 {
@@ -13,7 +16,41 @@ namespace TamamoSharp.Database.Quotes
 
         protected override void OnConfiguring(DbContextOptionsBuilder builder)
         {
+            string dir = Path.Combine(AppContext.BaseDirectory, "data");
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
 
+            string dataDir = Path.Combine(dir, "quotes.db");
+            builder.UseSqlite($"Filename={dataDir}");
         }
+
+        public async Task<bool> AddQuoteAsync(Quote q)
+        {
+            if (await ExistsAsync(q.GuildId, q.Name))
+                return false;
+
+            await Quotes.AddAsync(q);
+            await SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteQuoteAsync(Quote q)
+        {
+            if (!(await ExistsAsync(q.GuildId, q.Name)))
+                return false;
+
+            Remove(q);
+            await SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<Quote> GetQuoteAsync(ulong guildId, string name)
+            => await Quotes.FirstOrDefaultAsync(x => x.GuildId == guildId && x.Name == name);
+
+        public async Task<Quote[]> GetQuotesAsync(ulong guildId)
+            => await Quotes.Where(x => x.GuildId == guildId).ToArrayAsync();
+
+        public async Task<bool> ExistsAsync(ulong GuildId, string name)
+            => await Quotes.AnyAsync(x => x.GuildId == GuildId && (x.Name == name));
     }
 }
