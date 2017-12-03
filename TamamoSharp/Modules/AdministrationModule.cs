@@ -4,40 +4,39 @@ using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace TamamoSharp.Module
+namespace TamamoSharp.Modules
 {
-    public class Moderation : ModuleBase<SocketCommandContext>
+    public class AdministrationModule : TamamoModuleBase
     {
         [Group("prune")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(ChannelPermission.ManageMessages)]
-        public class Prune : ModuleBase<SocketCommandContext>
+        public class Prune : TamamoModuleBase
         {
             [Command]
             [Priority(0)]
             public async Task PruneSelf(int num = 100)
             {
-                await DoPrune(x => x.Author == Context.User, Context);
+                await DoPrune(Context, x => x.Author == Context.User, num);
             }
 
             [Command("user")]
             [Priority(10)]
             public async Task PruneUser(SocketGuildUser user, int num = 100)
             {
-                await DoPrune(x => x.Author == user, Context, num);
+                await DoPrune(Context, x => x.Author == user, num);
             }
 
             [Command("all")]
             [Priority(10)]
             public async Task PruneAll(int num = 100)
             {
-                await DoPrune(x => true, Context, num);
+                await DoPrune(Context, x => true, num);
             }
 
-            private async Task DoPrune(Func<IMessage, bool> expr, SocketCommandContext ctx, int count = 100)
+            private async Task DoPrune(SocketCommandContext ctx, Func<IMessage, bool> expr, int count = 100)
             {
                 ITextChannel channel = ctx.Channel as ITextChannel;
                 IEnumerable<IMessage> toDelete = (await channel.GetMessagesAsync(count).Flatten()).Where(expr);

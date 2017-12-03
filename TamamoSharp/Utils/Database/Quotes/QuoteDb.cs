@@ -1,9 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace TamamoSharp.Database.Quotes
@@ -24,6 +22,42 @@ namespace TamamoSharp.Database.Quotes
             builder.UseSqlite($"Filename={dataDir}");
         }
 
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<Quote>()
+                .Property(x => x.Id)
+                .ValueGeneratedOnAdd()
+                .IsRequired();
+
+            builder.Entity<Quote>()
+                .Property(x => x.Name)
+                .IsRequired();
+
+            builder.Entity<Quote>()
+                .Property(x => x.Content)
+                .IsRequired();
+
+            builder.Entity<Quote>()
+                .Property(x => x.OwnerId)
+                .IsRequired();
+
+            builder.Entity<Quote>()
+                .Property(x => x.GuildId)
+                .IsRequired();
+
+            builder.Entity<Quote>()
+                .Property(x => x.CreatedAt)
+                .IsRequired();
+
+            builder.Entity<Quote>()
+                .Property(x => x.UpdatedAt)
+                .IsRequired();
+
+            builder.Entity<Quote>()
+                .Property(x => x.Uses)
+                .IsRequired();
+        }
+
         public async Task<bool> AddQuoteAsync(Quote q)
         {
             if (await ExistsAsync(q.GuildId, q.Name))
@@ -42,6 +76,13 @@ namespace TamamoSharp.Database.Quotes
             Remove(q);
             await SaveChangesAsync();
             return true;
+        }
+
+        public async Task AddUseAsync(Quote q)
+        {
+            q.Uses += 1;
+            Update(q);
+            await SaveChangesAsync();
         }
 
         public async Task<Quote> GetQuoteAsync(ulong guildId, string name)

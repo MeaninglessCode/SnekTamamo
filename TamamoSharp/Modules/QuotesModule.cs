@@ -2,17 +2,15 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
 using TamamoSharp.Database.Quotes;
 
-namespace TamamoSharp.Module
+namespace TamamoSharp.Modules
 {
     [Group("quote")]
     [RequireContext(ContextType.Guild)]
-    public class QuotesModule : ModuleBase<SocketCommandContext>
+    public class QuotesModule : TamamoModuleBase
     {
         private readonly QuoteDb _qdb;
 
@@ -196,6 +194,8 @@ namespace TamamoSharp.Module
             };
 
             await ctx.Channel.SendMessageAsync("", false, e.Build());
+            await _qdb.AddUseAsync(q);
+
             return true;
         }
     }

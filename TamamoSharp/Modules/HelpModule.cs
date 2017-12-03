@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TamamoSharp.Module
+namespace TamamoSharp.Modules
 {
     [Group("help")]
-    public class Help : ModuleBase<SocketCommandContext>
+    public class HelpModule : ModuleBase<SocketCommandContext>
     {
         [Command]
         public async Task AllHelp()
@@ -16,7 +16,7 @@ namespace TamamoSharp.Module
         }
 
         [Command("module")]
-        public async Task HelpModule()
+        public async Task ModuleHelp()
         {
             await ReplyAsync("Hello");
         }

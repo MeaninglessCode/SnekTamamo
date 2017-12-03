@@ -37,6 +37,9 @@ namespace TamamoSharp.Services
 
         public Task LogMessageAsync(SocketMessage msg)
         {
+            if (msg.Author == _client.CurrentUser)
+                return Task.CompletedTask;
+
             Console.OutputEncoding = Encoding.Unicode;
             StringBuilder output = new StringBuilder();
             

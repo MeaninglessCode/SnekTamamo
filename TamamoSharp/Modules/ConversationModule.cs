@@ -1,19 +1,21 @@
 ﻿using Discord.Commands;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace TamamoSharp.Module
+namespace TamamoSharp.Modules
 {
-    public class Conversation : ModuleBase<SocketCommandContext>
+    public class ConversationModule : ModuleBase<SocketCommandContext>
     {
         private readonly Random _rng;
+        private readonly ulong ownerId;
 
-        public Conversation(Random rng)
+        public ConversationModule(IServiceProvider svc)
         {
-            _rng = rng;
+            _rng = svc.GetService<Random>();
+            ownerId = ulong.Parse((svc.GetService<IConfiguration>())["owner_id"]);
         }
 
         [Command("say")]
@@ -30,10 +32,15 @@ namespace TamamoSharp.Module
                 await ReplyAsync($"You rolled a {_rng.Next(lower, upper)}!");
         }
 
+        [Command("size")]
+        public async Task Size()
+            => await ReplyAsync((Context.Message.Author.Id == ownerId)? "32 cm. ( ͡° ͜ʖ ͡°)"
+                : $"{_rng.Next(0, 31)} cm.");
+
         [Command("choose")]
         public async Task Choose([Remainder] string s)
         {
-            string[] choices = s.Split(",");
+            string[] choices = s.Split(',');
             if (choices.Count() <= 1)
                 await ReplyAsync("Nothing to choose!");
             else
@@ -42,6 +49,6 @@ namespace TamamoSharp.Module
 
         [Command("scramble")]
         public async Task Scramble([Remainder] string s)
-            => await ReplyAsync(String.Join(" ", ((s.Split(" ")).OrderBy(x => _rng.Next())).ToArray()));
+            => await ReplyAsync(String.Join(' ', ((s.Split(' ')).OrderBy(x => _rng.Next())).ToArray()));
     }
 }
