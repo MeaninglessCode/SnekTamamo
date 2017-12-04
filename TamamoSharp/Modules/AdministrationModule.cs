@@ -8,9 +8,12 @@ using System.Threading.Tasks;
 
 namespace TamamoSharp.Modules
 {
+    [Name("Administration")]
+    [Summary("Commands for performing administrative actions within a guild.")]
     public class AdministrationModule : TamamoModuleBase
     {
         [Group("prune")]
+        [Summary("Several methods of pruning messages from a guild.")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(ChannelPermission.ManageMessages)]
         public class Prune : TamamoModuleBase
@@ -29,6 +32,24 @@ namespace TamamoSharp.Modules
             [Priority(10)]
             public async Task PruneAll(int num = 100)
                 => await DoPrune(Context, x => true, num);
+
+            [Command("embeds")]
+            [Priority(10)]
+            public async Task PruneEmbeds(int num = 100)
+                => await DoPrune(Context, x => x.Embeds.Count > 0, num);
+
+            [Command("files")]
+            public async Task PruneFiles(int num = 100)
+                => await DoPrune(Context, x => x.Attachments.Count > 0, num);
+
+            [Command("contains")]
+            public async Task PruneSubstring(string subString, int num = 100)
+                => await DoPrune(Context, x => x.Content.Contains(subString), num);
+
+            [Command("bot")]
+            [Priority(10)]
+            public async Task PruneBot(int num = 100)
+                => await DoPrune(Context, x => x.Author.IsBot, num);
 
             private async Task DoPrune(SocketCommandContext ctx, Func<IMessage, bool> expr, int count = 100)
             {
@@ -72,6 +93,7 @@ namespace TamamoSharp.Modules
         }
 
         [Command("kick")]
+        [RequireContext(ContextType.Guild)]
         [RequireBotPermission(GuildPermission.KickMembers)]
         public async Task Kick(SocketGuildUser user, string reason = null)
         {
@@ -79,5 +101,14 @@ namespace TamamoSharp.Modules
             await ReplyAsync($"{user.Username} has been kicked.");
         }
 
+        [Command("softban")]
+        [RequireContext(ContextType.Guild)]
+        [RequireBotPermission(GuildPermission.BanMembers)]
+        public async Task SoftBan(SocketGuildUser user, string reason = null)
+        {
+            await Context.Guild.AddBanAsync(user, reason: reason);
+            await Context.Guild.RemoveBanAsync(user);
+            await ReplyAsync(":ok_hand:");
+        }
     }
 }

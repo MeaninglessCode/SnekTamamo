@@ -1,17 +1,17 @@
 ﻿using Discord;
 using Discord.Commands;
+using HtmlAgilityPack;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using TamamoSharp.Utils;
 
 namespace TamamoSharp.Modules
 {
+    [Name("WebSearch")]
+    [Summary("searching...")]
     public class WebSearchModule : TamamoModuleBase
     {
         public readonly string GoogleApiKey;
@@ -50,7 +50,7 @@ namespace TamamoSharp.Modules
                 + $"\n\n**Definition**: {termData["definition"]}\n\n**Example**: {termData["example"]}";
             string embedIcon = "https://goo.gl/SnxyHE";
 
-            Embed embed = (new EmbedBuilder
+            EmbedBuilder embed = (new EmbedBuilder
             {
                 Author = new EmbedAuthorBuilder
                 {
@@ -60,10 +60,9 @@ namespace TamamoSharp.Modules
                 },
                 Description = description,
                 Color = new Color(52, 159, 244)
-            })
-            .Build();
+            });
 
-            await ReplyAsync("", false, embed);
+            await ReplyAsync("", embed: embed.Build());
         }
 
         [Group("imgur")]
@@ -71,7 +70,8 @@ namespace TamamoSharp.Modules
         {
             private readonly string ImgurClientId;
 
-            public Imgur(IConfiguration cfg) {
+            public Imgur(IConfiguration cfg)
+            {
                 ImgurClientId = cfg["tokens:imgur_client_id"];
             }
 
@@ -107,7 +107,6 @@ namespace TamamoSharp.Modules
                 }
                 
                 string url = "https://api.imgur.com/3/gallery/search/";
-
                 if (sort != "") url += $"{sort}/";
                 if (time != "") url += $"{time}/";
                 if (sort != "" && time != "") url += $"{page.ToString()}/";
@@ -120,18 +119,14 @@ namespace TamamoSharp.Modules
                 };
                 
                 JObject response = await WebHelpers.GetJsonResponseAsync(url, headers);
-
                 if ((string)response["success"] == "false")
                 {
                     await DelayDeleteReplyAsync("No results found!", 5);
                     return;
                 }
 
-                int dataCount = ((JArray)response["data"]).Count();
-
                 string links = string.Join('\n', (from result in response["data"] select (string)result["link"])
                     .ToList().Take(results));
-
                 await ReplyAsync(links);
             }
 
@@ -142,5 +137,19 @@ namespace TamamoSharp.Modules
 
             }
         }
+
+        [Command("xkcd")]
+        public async Task XkcdComic()
+        {
+            string url = "https://c.xkcd.com/random/comic/";
+            HtmlDocument doc = await WebHelpers.GetHtmlDocumentResponseAsync(url);
+            string image = doc.DocumentNode.SelectSingleNode("//div[@id='comic']/img")
+                .Attributes["src"].Value;
+            await ReplyAsync($"https:{image}");
+        }
+
+        [Command("shorten")]
+        public async Task ShortenUrl(string url)
+            => await ReplyAsync($"<{await WebHelpers.ShortenUrlAsync(GoogleApiKey, url)}>");
     }
 }

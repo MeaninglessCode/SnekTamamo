@@ -13,5 +13,14 @@ namespace TamamoSharp.Modules
             await Task.Delay(seconds*1000);
             await msg.DeleteAsync();
         }
+
+        public async Task DMReplyAsync(string message, bool isTTS = false, Embed embed = null,
+            RequestOptions options = null)
+        {
+            IDMChannel channel = await Context.User.GetOrCreateDMChannelAsync();
+            await channel.TriggerTypingAsync();
+            await channel.SendMessageAsync(message, isTTS, embed, options);
+            await channel.CloseAsync();
+        }
     }
 }

@@ -22,42 +22,6 @@ namespace TamamoSharp.Database.Quotes
             builder.UseSqlite($"Filename={dataDir}");
         }
 
-        protected override void OnModelCreating(ModelBuilder builder)
-        {
-            builder.Entity<Quote>()
-                .Property(x => x.Id)
-                .ValueGeneratedOnAdd()
-                .IsRequired();
-
-            builder.Entity<Quote>()
-                .Property(x => x.Name)
-                .IsRequired();
-
-            builder.Entity<Quote>()
-                .Property(x => x.Content)
-                .IsRequired();
-
-            builder.Entity<Quote>()
-                .Property(x => x.OwnerId)
-                .IsRequired();
-
-            builder.Entity<Quote>()
-                .Property(x => x.GuildId)
-                .IsRequired();
-
-            builder.Entity<Quote>()
-                .Property(x => x.CreatedAt)
-                .IsRequired();
-
-            builder.Entity<Quote>()
-                .Property(x => x.UpdatedAt)
-                .IsRequired();
-
-            builder.Entity<Quote>()
-                .Property(x => x.Uses)
-                .IsRequired();
-        }
-
         public async Task<bool> AddQuoteAsync(Quote q)
         {
             if (await ExistsAsync(q.GuildId, q.Name))

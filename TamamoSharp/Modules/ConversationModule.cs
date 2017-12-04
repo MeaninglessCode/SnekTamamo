@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace TamamoSharp.Modules
 {
+    [Name("Conversation")]
+    [Summary("misc commands")]
     public class ConversationModule : ModuleBase<SocketCommandContext>
     {
         private readonly Random _rng;

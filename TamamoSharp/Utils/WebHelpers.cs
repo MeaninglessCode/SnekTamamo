@@ -1,8 +1,10 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using HtmlAgilityPack;
+using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace TamamoSharp.Utils
 {
@@ -31,12 +33,11 @@ namespace TamamoSharp.Utils
                 req.Headers = headers;
 
             WebResponse res = await req.GetResponseAsync();
-
             return JObject.Parse(await (new StreamReader(res.GetResponseStream())
                 .ReadToEndAsync()));
         }
 
-        public static async Task<string> GetResponse(string url, WebHeaderCollection headers = null)
+        public static async Task<string> GetResponseAsync(string url, WebHeaderCollection headers = null)
         {
             WebRequest req = WebRequest.Create(url);
             if (headers != null)
@@ -45,6 +46,34 @@ namespace TamamoSharp.Utils
             WebResponse res = await req.GetResponseAsync();
             return (await (new StreamReader(res.GetResponseStream())
                 .ReadToEndAsync()));
+        }
+
+        public static async Task<XDocument> GetXmlResponseAsync(string url, WebHeaderCollection headers = null)
+        {
+            WebRequest req = WebRequest.Create(url);
+            if (headers != null)
+                req.Headers = headers;
+
+            WebResponse res = await req.GetResponseAsync();
+            return XDocument.Parse(await (new StreamReader(res.GetResponseStream()))
+                .ReadToEndAsync());
+
+        }
+
+        public static async Task<HtmlDocument> GetHtmlDocumentResponseAsync(string url,
+            WebHeaderCollection headers = null)
+        {
+            WebRequest req = WebRequest.Create(url);
+            if (headers != null)
+                req.Headers = headers;
+
+            HtmlDocument doc = new HtmlDocument();
+            WebResponse res = await req.GetResponseAsync();
+
+            doc.LoadHtml(await (new StreamReader(res.GetResponseStream()))
+                .ReadToEndAsync());
+
+            return doc;
         }
     }
 }

@@ -8,7 +8,8 @@ using TamamoSharp.Database.Quotes;
 
 namespace TamamoSharp.Modules
 {
-    [Group("quote")]
+    [Group("quote"), Name("Quote")]
+    [Summary("Commands for storing quotes by guild users.")]
     [RequireContext(ContextType.Guild)]
     public class QuotesModule : TamamoModuleBase
     {
@@ -46,7 +47,7 @@ namespace TamamoSharp.Modules
 
         [Command("me"), Alias("m", "self")]
         [Priority(10)]
-        public async Task QuoteMe(string name, string content)
+        public async Task QuoteMe(string name, [Remainder] string content)
         {
             Quote q = new Quote
             {
