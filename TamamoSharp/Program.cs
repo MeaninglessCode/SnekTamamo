@@ -6,7 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using TamamoSharp.Database.GuildConfigs;
 using TamamoSharp.Database.Quotes;
+using TamamoSharp.Database.Tags;
 using TamamoSharp.Services;
 
 namespace TamamoSharp
@@ -42,7 +44,9 @@ namespace TamamoSharp
                 .AddSingleton<CommandHandler>()
                 .AddSingleton<Logger>()
                 .AddSingleton<Random>()
+                .AddSingleton<GuildConfigDb>()
                 .AddSingleton<QuoteDb>()
+                .AddSingleton<TagDb>()
                 .AddLogging()
                 .BuildServiceProvider();
 

@@ -1,11 +1,9 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 
 namespace TamamoSharp.Database.Quotes
 {
     public class Quote
     {
-        [Key]
         public int Id { get; set; }
         public string Name { get; set; }
         public string Content { get; set; }

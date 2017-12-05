@@ -41,8 +41,17 @@ namespace TamamoSharp.Services
                 SocketCommandContext ctx = new SocketCommandContext(_client, msg);
                 IResult result = await _cmds.ExecuteAsync(ctx, argPos, _svc);
 
-                if (result.Error.HasValue && (result.Error.Value != CommandError.UnknownCommand))
-                    await ctx.Channel.SendMessageAsync(result.ToString());
+                if (result.Error.HasValue)
+                {
+                    switch (result.Error)
+                    {
+                        case CommandError.UnknownCommand:
+                            break;
+                        default:
+                            await ctx.Channel.SendMessageAsync(result.ToString());
+                            break;
+                    }
+                }
                 else if (result.Error.HasValue)
                     await ctx.Channel.SendMessageAsync(result.ToString());
             }

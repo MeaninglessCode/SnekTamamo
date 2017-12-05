@@ -36,11 +36,11 @@ namespace TamamoSharp.Modules
         {
             Quote[] quotes = await _qdb.GetQuotesAsync(Context.Guild.Id);
 
-            if (quotes.Count() == 0)
-                await ReplyAsync("No quotes found for this guild!");
+            if (quotes.Length <= 0)
+                await DelayDeleteReplyAsync("No quotes found for this guild!");
             else
             {
-                string quoteNames = string.Join(",", from quote in quotes select quote.Name);
+                string quoteNames = string.Join(", ", from quote in quotes select quote.Name);
                 await ReplyAsync($"Quotes:\n{quoteNames}");
             }
         }
@@ -49,6 +49,11 @@ namespace TamamoSharp.Modules
         [Priority(10)]
         public async Task QuoteMe(string name, [Remainder] string content)
         {
+            if (await _qdb.GetQuoteAsync(Context.Guild.Id, name) != null)
+            {
+                await DelayDeleteReplyAsync($"A quote with the name **{name}** already exists!", 5);
+            }
+
             Quote q = new Quote
             {
                 Name = name,
@@ -57,12 +62,8 @@ namespace TamamoSharp.Modules
                 GuildId = Context.Guild.Id
             };
 
-            bool result = await _qdb.AddQuoteAsync(q);
-
-            if (!result)
-                await ReplyAsync("A quote with that name already exists!");
-            else
-                await ReplyAsync("Quote successfully added!");
+            await _qdb.AddQuoteAsync(q);
+            await DelayDeleteReplyAsync("Quote successfully added!", 5);
         }
 
         [Command("add"), Alias("a")]
@@ -71,14 +72,14 @@ namespace TamamoSharp.Modules
         {
             string[] messageIds = ids.Split(" ");
 
-            if (messageIds.Count() <= 0)
+            if (messageIds.Length <= 0)
             {
-                await ReplyAsync("No IDs found!");
+                await DelayDeleteReplyAsync("No IDs found!", 5);
                 return;
             }
-            else if (await _qdb.ExistsAsync(Context.Guild.Id, name))
+            else if (await _qdb.GetQuoteAsync(Context.Guild.Id, name) != null)
             {
-                await ReplyAsync("A quote with that name already exists!");
+                await DelayDeleteReplyAsync($"A quote with the name **{name}** already exists!", 5);
                 return;
             }
             else
@@ -98,7 +99,7 @@ namespace TamamoSharp.Modules
                 {
                     if (!ulong.TryParse(id, out ulong messageId))
                     {
-                        await ReplyAsync("Invalid message ID given!");
+                        await DelayDeleteReplyAsync("Invalid message ID given!", 5);
                         return;
                     }
                     else
@@ -107,7 +108,7 @@ namespace TamamoSharp.Modules
 
                         if (message.Author.Id != baseMessage.Author.Id)
                         {
-                            await ReplyAsync("Inconsistent message author!");
+                            await DelayDeleteReplyAsync("Inconsistent message author!", 5);
                             return;
                         }
                         else
@@ -116,16 +117,17 @@ namespace TamamoSharp.Modules
 
                             if (timeDiff > 1800)
                             {
-                                await ReplyAsync("Message times too far apart!");
+                                await DelayDeleteReplyAsync("Message times too far apart!", 5);
+                                return;
                             }
                             else
                                 quoteContent += $"\n{message.Content}";
                         }
                     }
 
-                    if (quoteContent.Length > 1800)
+                    if (quoteContent.Length > 2000)
                     {
-                        await ReplyAsync("Quote too long!");
+                        await DelayDeleteReplyAsync("Quote too long!", 5);
                         return;
                     }
 
@@ -137,32 +139,25 @@ namespace TamamoSharp.Modules
                         GuildId = Context.Guild.Id
                     };
 
-                    bool result = await _qdb.AddQuoteAsync(q);
-
-                    if (!result)
-                        await ReplyAsync("Quote failed to add!");
-                    else
-                        await ReplyAsync("Quote successfully added!");
+                    await _qdb.AddQuoteAsync(q);
+                    await DelayDeleteReplyAsync("Quote successfully added!", 5);
                 }
             }
         }
 
         [Command("remove"), Alias("r", "d", "delete")]
+        [RequireUserPermission(GuildPermission.ManageMessages)]
         [Priority(10)]
         public async Task RemoveQuote(string name)
         {
             Quote q = await _qdb.GetQuoteAsync(Context.Guild.Id, name);
 
             if (q == null)
-                await ReplyAsync("Quote not found!");
+                await DelayDeleteReplyAsync($"Quote **{name}** not found!", 5);
             else
             {
-                bool result = await _qdb.DeleteQuoteAsync(q);
-
-                if (!result)
-                    await ReplyAsync("Failed to remove quote!");
-                else
-                    await ReplyAsync("Quote removed!");
+                await _qdb.DeleteQuoteAsync(q);
+                await DelayDeleteReplyAsync("Quote deleted!", 5);
             }
         }
 

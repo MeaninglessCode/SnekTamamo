@@ -20,12 +20,14 @@ namespace TamamoSharp.Modules
             ownerId = ulong.Parse((svc.GetService<IConfiguration>())["owner_id"]);
         }
 
-        [Command("say")]
+        [Command("say"), Name("Say")]
+        [Summary("Tamamo repeats the given text.")]
         [RequireBotOwner]
         public async Task Say(string s)
             => await ReplyAsync(s);
 
-        [Command("roll")]
+        [Command("roll"), Name("Roll")]
+        [Summary("Tamamo chooses a number within the specified range.")]
         public async Task Roll(int lower = 0, int upper = 100)
         {
             if (lower > upper)
@@ -34,12 +36,14 @@ namespace TamamoSharp.Modules
                 await ReplyAsync($"You rolled a {_rng.Next(lower, upper)}!");
         }
 
-        [Command("size")]
+        [Command("size"), Name("Size")]
+        [Summary("Tamamo choose a random size from 1-32 cm. ( ͡° ͜ʖ ͡°)")]
         public async Task Size()
             => await ReplyAsync((Context.Message.Author.Id == ownerId)? "32 cm. ( ͡° ͜ʖ ͡°)"
                 : $"{_rng.Next(0, 31)} cm.");
 
-        [Command("choose")]
+        [Command("choose"), Name("Choose")]
+        [Summary("Tamamo chooses a random option from a comma delimited list.")]
         public async Task Choose([Remainder] string s)
         {
             string[] choices = s.Split(',');
@@ -49,7 +53,8 @@ namespace TamamoSharp.Modules
                 await ReplyAsync(choices[_rng.Next(0, choices.Count())]);
         }
 
-        [Command("scramble")]
+        [Command("scramble"), Name("Scramble")]
+        [Summary("Randomly scrambles a string on a word-by-word basis.")]
         public async Task Scramble([Remainder] string s)
             => await ReplyAsync(String.Join(' ', ((s.Split(' ')).OrderBy(x => _rng.Next())).ToArray()));
     }

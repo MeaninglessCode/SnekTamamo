@@ -22,24 +22,45 @@ namespace TamamoSharp.Database.Quotes
             builder.UseSqlite($"Filename={dataDir}");
         }
 
-        public async Task<bool> AddQuoteAsync(Quote q)
+        protected override void OnModelCreating(ModelBuilder builder)
         {
-            if (await ExistsAsync(q.GuildId, q.Name))
-                return false;
-
-            await Quotes.AddAsync(q);
-            await SaveChangesAsync();
-            return true;
+            builder.Entity<Quote>()
+                .Property(x => x.Id)
+                .ValueGeneratedOnAdd()
+                .IsRequired();
+            builder.Entity<Quote>()
+                .Property(x => x.Name)
+                .IsRequired();
+            builder.Entity<Quote>()
+                .Property(x => x.Content)
+                .IsRequired();
+            builder.Entity<Quote>()
+                .Property(x => x.OwnerId)
+                .IsRequired();
+            builder.Entity<Quote>()
+                .Property(x => x.GuildId)
+                .IsRequired();
+            builder.Entity<Quote>()
+                .Property(x => x.CreatedAt)
+                .IsRequired();
+            builder.Entity<Quote>()
+                .Property(x => x.UpdatedAt)
+                .IsRequired();
+            builder.Entity<Quote>()
+                .Property(x => x.Uses)
+                .IsRequired();
         }
 
-        public async Task<bool> DeleteQuoteAsync(Quote q)
+        public async Task AddQuoteAsync(Quote q)
         {
-            if (!(await ExistsAsync(q.GuildId, q.Name)))
-                return false;
+            await Quotes.AddAsync(q);
+            await SaveChangesAsync();
+        }
 
+        public async Task DeleteQuoteAsync(Quote q)
+        {
             Remove(q);
             await SaveChangesAsync();
-            return true;
         }
 
         public async Task AddUseAsync(Quote q)
@@ -54,8 +75,5 @@ namespace TamamoSharp.Database.Quotes
 
         public async Task<Quote[]> GetQuotesAsync(ulong guildId)
             => await Quotes.Where(x => x.GuildId == guildId).ToArrayAsync();
-
-        public async Task<bool> ExistsAsync(ulong GuildId, string name)
-            => await Quotes.AnyAsync(x => x.GuildId == GuildId && (x.Name == name));
     }
 }

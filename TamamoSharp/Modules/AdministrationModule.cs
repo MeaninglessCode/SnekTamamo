@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TamamoSharp.Database.GuildConfigs;
 
 namespace TamamoSharp.Modules
 {
@@ -91,6 +92,18 @@ namespace TamamoSharp.Modules
                     await DelayDeleteReplyAsync(toSend, 5);
             }
         }
+
+        [Group("ignore")]
+        public class Ignore : TamamoModuleBase
+        {
+            private readonly GuildConfigDb _gcdb;
+
+            public Ignore(GuildConfigDb gcdb)
+            {
+                _gcdb = gcdb;
+            }
+        }
+
 
         [Command("kick")]
         [RequireContext(ContextType.Guild)]
