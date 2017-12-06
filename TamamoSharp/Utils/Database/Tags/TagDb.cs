@@ -113,5 +113,12 @@ namespace TamamoSharp.Database.Tags
 
         public async Task<TagAlias[]> GetAliasesAsync(int tagId)
             => await Aliases.Where(x => x.TagId == tagId).ToArrayAsync();
+
+        public async Task AddUseAsync(Tag t)
+        {
+            t.Uses += 1;
+            Update(t);
+            await SaveChangesAsync();
+        }
     }
 }

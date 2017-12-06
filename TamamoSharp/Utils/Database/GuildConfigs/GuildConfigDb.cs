@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace TamamoSharp.Database.GuildConfigs
 {
@@ -27,11 +29,10 @@ namespace TamamoSharp.Database.GuildConfigs
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<GuildConfig>()
-                .Property(x => x.Id)
-                .ValueGeneratedOnAdd()
+                .Property(x => x.GuildId)
                 .IsRequired();
             builder.Entity<GuildConfig>()
-                .Property(x => x.GuildId)
+                .Property(x => x.IsIgnored)
                 .IsRequired();
             builder.Entity<GuildConfig>()
                 .Property(x => x.NSFWEnabled)
@@ -67,5 +68,77 @@ namespace TamamoSharp.Database.GuildConfigs
                 .WithMany(x => x.IgnoredUsers)
                 .OnDelete(DeleteBehavior.Cascade);
         }
+
+        public async Task AddGuildAsync(GuildConfig gc)
+        {
+            await GuildConfigs.AddAsync(gc);
+            await SaveChangesAsync();
+        }
+
+        public async Task<bool> GuildIgnoredAsync(ulong guildId)
+        {
+            GuildConfig c = await GetGuildConfigAsync(guildId);
+            if (c == null)
+                return false;
+            else
+                return c.IsIgnored;
+        }
+
+        public async Task IgnoreGuildAsync(ulong guildId)
+        {
+            GuildConfig c = await GetGuildConfigAsync(guildId);
+            c.IsIgnored = true;
+            Update(c);
+            await SaveChangesAsync();
+        }
+
+        public async Task UnIgnoreGuildAsync(ulong guildId)
+        {
+            GuildConfig c = await GetGuildConfigAsync(guildId);
+            c.IsIgnored = false;
+            Update(c);
+            await SaveChangesAsync();
+        }
+
+        public async Task<GuildConfig> GetGuildConfigAsync(ulong guildId)
+            => await GuildConfigs.SingleOrDefaultAsync(x => x.GuildId == guildId);
+
+        public async Task IgnoreUserAsync(IgnoredUser u)
+        {
+            await IgnoredUsers.AddAsync(u);
+            await SaveChangesAsync();
+        }
+
+        public async Task UnIgnoreUserAsync(IgnoredUser u)
+        {
+            Remove(u);
+            await SaveChangesAsync();
+        }
+
+        public async Task<bool> UserIgnoredAsync(ulong guildId, ulong userId)
+            => (await GetIgnoredUserAsync(guildId, userId) == null)? false : true;
+
+        public async Task<IgnoredUser> GetIgnoredUserAsync(ulong guildId, ulong userId)
+            => await IgnoredUsers.Include(x => x.GuildConfig).SingleOrDefaultAsync(x =>
+               x.GuildId == guildId && x.UserId == userId);
+
+        public async Task IgnoreChannelAsync(IgnoredChannel c)
+        {
+            await IgnoredChannels.AddAsync(c);
+            await SaveChangesAsync();
+        }
+
+        public async Task UnIgnoreChannelAsync(IgnoredChannel c)
+        {
+            Remove(c);
+            await SaveChangesAsync();
+        }
+
+        public async Task<bool> ChannelIgnoredAsync(ulong guildId, ulong channelId)
+            => (await GetIgnoredChannelAsync(guildId, channelId) == null) ? false : true;
+
+        public async Task<IgnoredChannel> GetIgnoredChannelAsync(ulong guildId, ulong channelId)
+            => await IgnoredChannels.Include(x => x.GuildConfig).SingleOrDefaultAsync(x =>
+               x.GuildId == guildId && x.ChannelId == channelId);
     }
 }

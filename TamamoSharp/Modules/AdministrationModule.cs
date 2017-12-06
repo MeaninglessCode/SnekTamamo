@@ -72,7 +72,7 @@ namespace TamamoSharp.Modules
                 int deleted = toDelete.Count();
                 List<string> result = new List<string>
                 {
-                    $"{deleted} message{((deleted == 1) ? " was" : "'s were")} pruned!"
+                    $"{deleted} message{((deleted == 1) ? " was" : "s were")} pruned!"
                 };
 
                 if (deleted > 0)
@@ -97,11 +97,114 @@ namespace TamamoSharp.Modules
         public class Ignore : TamamoModuleBase
         {
             private readonly GuildConfigDb _gcdb;
+            private readonly DiscordSocketClient _client;
 
-            public Ignore(GuildConfigDb gcdb)
+            public Ignore(GuildConfigDb gcdb, DiscordSocketClient client)
+            {
+                _gcdb = gcdb;
+                _client = client;
+            }
+
+            [Command("user")]
+            [RequireUserPermission(GuildPermission.MuteMembers)]
+            public async Task IgnoreUser(SocketGuildUser user)
+            {
+                if (await _gcdb.UserIgnoredAsync(Context.Guild.Id, user.Id))
+                {
+                    await DelayDeleteReplyAsync("That user is already ignored!", 5);
+                    return;
+                }
+
+                GuildConfig gc = await _gcdb.GetGuildConfigAsync(Context.Guild.Id);
+                IgnoredUser ignore = new IgnoredUser
+                {
+                    GuildId = Context.Guild.Id,
+                    UserId = user.Id,
+                    GuildConfig = gc
+                };
+
+                await _gcdb.IgnoreUserAsync(ignore);
+                await DelayDeleteReplyAsync($"User `{user.Username}#{user.Discriminator}` ignored!", 5);
+            }
+
+            [Command("channel")]
+            [RequireUserPermission(GuildPermission.MuteMembers)]
+            public async Task IgnoreChannel(SocketGuildChannel channel)
+            {
+                if (await _gcdb.ChannelIgnoredAsync(Context.Guild.Id, channel.Id))
+                {
+                    await DelayDeleteReplyAsync("That channel is already ignored!", 5);
+                    return;
+                }
+
+                GuildConfig gc = await _gcdb.GetGuildConfigAsync(Context.Guild.Id);
+                IgnoredChannel ignore = new IgnoredChannel
+                {
+                    GuildId = Context.Guild.Id,
+                    ChannelId = channel.Id,
+                    GuildConfig = await _gcdb.GetGuildConfigAsync(Context.Guild.Id)
+                };
+
+                await _gcdb.IgnoreChannelAsync(ignore);
+                await ReplyAsync($"Channel `#{channel.Name}` ignored!");
+            }
+
+            [Command("guild")]
+            [RequireBotOwner]
+            public async Task IgnoreGuild(ulong guildId)
+            {
+                SocketGuild guild = _client.GetGuild(guildId);
+                if (guild == null)
+                {
+                    await DelayDeleteReplyAsync("Guild not found!", 5);
+                    return;
+                }
+
+                await _gcdb.IgnoreGuildAsync(guildId);
+                await ReplyAsync($"Guild `{guild.Name}({guild.Id})` ignored!");
+            }
+        }
+
+        [Group("unignore")]
+        public class UnIgnore : TamamoModuleBase
+        {
+            private readonly GuildConfigDb _gcdb;
+
+            public UnIgnore(GuildConfigDb gcdb)
             {
                 _gcdb = gcdb;
             }
+
+            [Command("user")]
+            [RequireUserPermission(GuildPermission.MuteMembers)]
+            public async Task UnIgnoreUser(SocketGuildUser user)
+            {
+                IgnoredUser u = await _gcdb.GetIgnoredUserAsync(Context.Guild.Id, user.Id);
+                if (u == null)
+                {
+                    await DelayDeleteReplyAsync("That user is not ignored!", 5);
+                    return;
+                }
+
+                await _gcdb.UnIgnoreUserAsync(u);
+                await ReplyAsync($"User `{user.Username}#{user.Discriminator}` unignored!");
+            }
+
+            [Command("channel")]
+            [RequireUserPermission(GuildPermission.MuteMembers)]
+            public async Task UnIgnoreChannel(SocketGuildChannel channel)
+            {
+                IgnoredChannel c = await _gcdb.GetIgnoredChannelAsync(Context.Guild.Id, channel.Id);
+                if (c == null)
+                {
+                    await DelayDeleteReplyAsync("That channel is not ignored!", 5);
+                    return;
+                }
+
+                await _gcdb.UnIgnoreChannelAsync(c);
+                await ReplyAsync($"Channel `#{channel.Name}` unignored!");
+            }
+
         }
 
 

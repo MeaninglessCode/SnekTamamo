@@ -25,7 +25,14 @@ namespace TamamoSharp.Modules
         {
             Tag tag = await _tdb.GetTagAsync(Context.Guild.Id, name);
 
-            await ReplyAsync(tag.Name);
+            if (tag == null)
+            {
+                await DelayDeleteReplyAsync($"Tag **{name}** not found!", 5);
+                return;
+            }
+
+            await _tdb.AddUseAsync(tag);
+            await ReplyAsync(tag.Content);
         }
 
         [Command("list"), Alias("l")]
@@ -120,6 +127,36 @@ namespace TamamoSharp.Modules
         public async Task RemoveAlias(string tagName, string aliasName)
         {
 
+        }
+
+        [Command("info")]
+        public async Task TagInfo(string name)
+        {
+            Tag tag = await _tdb.GetTagAsync(Context.Guild.Id, name);
+
+            if (tag == null)
+            {
+                await DelayDeleteReplyAsync($"Tag **{name}** not found!", 5);
+                return;
+            }
+
+            IUser author = await Context.Channel.GetUserAsync(tag.OwnerId);
+            TagAlias[] aliases = await _tdb.GetAliasesAsync(tag.Id);
+            string aliasNames = string.Join(", ", from alias in aliases select alias.Name);
+
+            EmbedBuilder builder = new EmbedBuilder
+            {
+                Author = new EmbedAuthorBuilder
+                {
+                    Name = $"{author.Username}#{author.Discriminator}",
+                    IconUrl = author.GetAvatarUrl()
+                },
+                Description = $"Name: {tag.Name}\nAliases: {aliasNames}\nUses: {tag.Uses}"
+                + $"\nCreated: {tag.CreatedAt.ToString("ddd, MMM d, yyyy h:mm:ss tt")}"
+                + $"\nLast Updated: {tag.UpdatedAt.ToString("ddd, MMM d, yyyy h:mm:ss tt")}"
+            };
+
+            await ReplyAsync("", embed: builder.Build());
         }
     }
 }

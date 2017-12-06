@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace TamamoSharp.Database.GuildConfigs
 {
@@ -8,7 +7,8 @@ namespace TamamoSharp.Database.GuildConfigs
     {
         public int Id { get; set; }
         public ulong GuildId { get; set; }
-        public bool NSFWEnabled { get; set; }
+        public bool IsIgnored { get; set; } = false;
+        public bool NSFWEnabled { get; set; } = false;
         public List<IgnoredChannel> IgnoredChannels { get; set; }
         public List<IgnoredUser> IgnoredUsers { get; set; }
     }
@@ -16,7 +16,7 @@ namespace TamamoSharp.Database.GuildConfigs
     public class IgnoredChannel
     {
         public int Id { get; set; }
-        public int GuildId { get; set; }
+        public ulong GuildId { get; set; }
         public ulong ChannelId { get; set; }
         public GuildConfig GuildConfig { get; set; }
     }
@@ -24,7 +24,7 @@ namespace TamamoSharp.Database.GuildConfigs
     public class IgnoredUser
     {
         public int Id { get; set; }
-        public int GuildId { get; set; }
+        public ulong GuildId { get; set; }
         public ulong UserId { get; set; }
         public GuildConfig GuildConfig { get; set; }
     }
