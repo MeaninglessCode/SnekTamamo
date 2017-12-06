@@ -11,7 +11,7 @@ using TamamoSharp.Utils;
 namespace TamamoSharp.Modules
 {
     [Name("WebSearch")]
-    [Summary("searching...")]
+    [Summary("Various commands for searching the web and retrieving things.")]
     public class WebSearchModule : TamamoModuleBase
     {
         public readonly string GoogleApiKey;
@@ -21,7 +21,8 @@ namespace TamamoSharp.Modules
             GoogleApiKey = cfg["tokens:google"];
         }
 
-        [Command("ud"), Alias("urbandictionary")]
+        [Command("ud"), Name("UrbanDictionary"), Alias("urbandictionary")]
+        [Summary("Queries UrbanDictionary for the definition of a term.")]
         public async Task UrbanDictionary(string term, int termNum = 1)
         {
             termNum -= 1;
@@ -65,7 +66,8 @@ namespace TamamoSharp.Modules
             await ReplyAsync("", embed: embed.Build());
         }
 
-        [Group("imgur")]
+        [Group("imgur"), Name("Imgur")]
+        [Summary("A few commands for searching imgur.")]
         public class Imgur : TamamoModuleBase
         {
             private readonly string ImgurClientId;
@@ -82,7 +84,8 @@ namespace TamamoSharp.Modules
                 await ReplyAsync("No subcommand invoked! (will update later)");
             }
 
-            [Command("search")]
+            [Command("search"), Name("Search")]
+            [Summary("Searches imgur for an image based on a query.")]
             [Priority(10)]
             public async Task Search(string query, int results = 1, string sort = "",
                 string time = "", int page = 1)
@@ -130,7 +133,8 @@ namespace TamamoSharp.Modules
                 await ReplyAsync(links);
             }
 
-            [Command]
+            [Command("subreddit"), Name("Subreddit")]
+            [Summary("Searches imgur for an image from the given subreddit.")]
             [Priority(10)]
             public async Task Subreddit()
             {
@@ -138,7 +142,8 @@ namespace TamamoSharp.Modules
             }
         }
 
-        [Command("xkcd")]
+        [Command("xkcd"), Name("XKCD")]
+        [Summary("Shows a random comic from xkcd.")]
         public async Task XkcdComic()
         {
             string url = "https://c.xkcd.com/random/comic/";
@@ -148,7 +153,18 @@ namespace TamamoSharp.Modules
             await ReplyAsync($"https:{image}");
         }
 
-        [Command("shorten")]
+        [Command("randomdog"), Name("RandomDog"), Alias("woof")]
+        [Summary("Shows a random picture from random.dog.")]
+        public async Task RandomDog()
+            => await ReplyAsync($"https://random.dog/{await WebHelpers.GetResponseAsync("https://random.dog/woof")}");
+
+        [Command("randomcat"), Name("RandomCat"), Alias("meow")]
+        [Summary("Shows a random picture from random.cat.")]
+        public async Task RandomCat()
+            => await ReplyAsync((string)(await WebHelpers.GetJsonResponseAsync("https://random.cat/meow"))["file"]);
+
+        [Command("shorten"), Name("Shorten")]
+        [Summary("Uses goo.gl to shorten the given url.")]
         public async Task ShortenUrl(string url)
             => await ReplyAsync($"<{await WebHelpers.ShortenUrlAsync(GoogleApiKey, url)}>");
     }

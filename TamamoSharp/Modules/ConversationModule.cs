@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace TamamoSharp.Modules
 {
     [Name("Conversation")]
-    [Summary("misc commands")]
+    [Summary("Miscellaneous commands that have their own module.")]
     public class ConversationModule : ModuleBase<SocketCommandContext>
     {
         private readonly Random _rng;
@@ -21,7 +21,6 @@ namespace TamamoSharp.Modules
         }
 
         [Command("say"), Name("Say")]
-        [Summary("Tamamo repeats the given text.")]
         [RequireBotOwner]
         public async Task Say(string s)
             => await ReplyAsync(s);

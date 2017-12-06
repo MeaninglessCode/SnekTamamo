@@ -8,7 +8,7 @@ using TamamoSharp.Utils;
 namespace TamamoSharp.Modules
 {
     [Name("NSFW")]
-    [Summary("spooky commands")]
+    [Summary("Commands that are not safe for work.")]
     public class NSFWModule : TamamoModuleBase
     {
         private readonly Random _rng;
@@ -18,7 +18,8 @@ namespace TamamoSharp.Modules
             _rng = rng;
         }
 
-        [Command("tbib")]
+        [Command("tbib"), Name("TBIB")]
+        [Summary("Searches TBIB for a random image based on the given tags.")]
         public async Task SearchTbib([Remainder] string tags = "")
         {
             string url = "http://tbib.org/index.php?page=dapi&s=post&q=index&limit=0";
@@ -48,7 +49,8 @@ namespace TamamoSharp.Modules
             await ReplyAsync(result.Root.Element("post").Attribute("file_url").Value);
         }
 
-        [Command("danbooru")]
+        [Command("danbooru"), Name("Danbooru")]
+        [Summary("Searches Danbooru for a random image based on the given tags.")]
         public async Task SearchDanbooru([Remainder] string tags = "")
         {
             if (tags.Split(' ').Length > 2)

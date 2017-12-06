@@ -13,6 +13,22 @@ namespace TamamoSharp.Modules
     [Summary("Commands for performing administrative actions within a guild.")]
     public class AdministrationModule : TamamoModuleBase
     {
+        [Command("setgame")]
+        [RequireBotOwner]
+        public async Task SetGame(string name)
+            => await Context.Client.SetGameAsync(name);
+        
+        [Command("ginfo")]
+        public async Task GuildInfo(ulong guildId = 0)
+        {
+            SocketGuild guild = (guildId == 0)? Context.Guild : Context.Client.GetGuild(guildId);
+
+            string roleList = string.Join(", ", from role in guild.Roles select role.Name);
+            int onlineUsers = guild.Users.Where(x => x.Status == UserStatus.Online).Count();
+            int offlineUsers = guild.Users.Where(x => x.Status == UserStatus.Offline).Count();
+
+        }
+
         [Group("prune")]
         [Summary("Several methods of pruning messages from a guild.")]
         [RequireContext(ContextType.Guild)]
@@ -97,12 +113,10 @@ namespace TamamoSharp.Modules
         public class Ignore : TamamoModuleBase
         {
             private readonly GuildConfigDb _gcdb;
-            private readonly DiscordSocketClient _client;
 
             public Ignore(GuildConfigDb gcdb, DiscordSocketClient client)
             {
                 _gcdb = gcdb;
-                _client = client;
             }
 
             [Command("user")]
@@ -153,7 +167,7 @@ namespace TamamoSharp.Modules
             [RequireBotOwner]
             public async Task IgnoreGuild(ulong guildId)
             {
-                SocketGuild guild = _client.GetGuild(guildId);
+                SocketGuild guild = Context.Client.GetGuild(guildId);
                 if (guild == null)
                 {
                     await DelayDeleteReplyAsync("Guild not found!", 5);

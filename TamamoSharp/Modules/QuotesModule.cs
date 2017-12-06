@@ -20,7 +20,8 @@ namespace TamamoSharp.Modules
             _qdb = qdb;
         }
 
-        [Command]
+        [Command, Name("GetQuote")]
+        [Summary("By default, the quote command shows the quote with the given name.")]
         [Priority(0)]
         public async Task GetQuote(string name)
         {
@@ -30,7 +31,8 @@ namespace TamamoSharp.Modules
                 await ReplyAsync("Quote owner not found!");
         }
 
-        [Command("list"), Alias("l", "ls")]
+        [Command("list"), Name("QuoteList"), Alias("l", "ls")]
+        [Summary("Lists all quotes available for the current guild.")]
         [Priority(10)]
         public async Task ListQuotes()
         {
@@ -45,7 +47,8 @@ namespace TamamoSharp.Modules
             }
         }
 
-        [Command("me"), Alias("m", "self")]
+        [Command("me"), Name("QuoteMe"), Alias("m", "self")]
+        [Summary("Quote yourself with the given content")]
         [Priority(10)]
         public async Task QuoteMe(string name, [Remainder] string content)
         {
@@ -66,7 +69,8 @@ namespace TamamoSharp.Modules
             await DelayDeleteReplyAsync("Quote successfully added!", 5);
         }
 
-        [Command("add"), Alias("a")]
+        [Command("add"), Name("AddQuote"), Alias("a")]
+        [Summary("Add a new quote to the server by passing message IDs.")]
         [Priority(10)]
         public async Task AddQuote(string name, [Remainder] string ids)
         {
@@ -145,7 +149,8 @@ namespace TamamoSharp.Modules
             }
         }
 
-        [Command("remove"), Alias("r", "d", "delete")]
+        [Command("remove"), Name("RemoveQuote"), Alias("r", "d", "delete")]
+        [Summary("Removes a quote with the given name from the current guild.")]
         [RequireUserPermission(GuildPermission.ManageMessages)]
         [Priority(10)]
         public async Task RemoveQuote(string name)

@@ -32,7 +32,7 @@ namespace TamamoSharp.Modules
             }
 
             await _tdb.AddUseAsync(tag);
-            await ReplyAsync(tag.Content);
+            await ReplyAsync($"**{tag.Name}**:\n{tag.Content}");
         }
 
         [Command("list"), Alias("l")]
