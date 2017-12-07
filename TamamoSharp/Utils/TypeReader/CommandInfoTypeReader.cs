@@ -16,7 +16,14 @@ namespace TamamoSharp.Utils
                 x.Aliases.Any(y => string.Equals(y, input, StringComparison.OrdinalIgnoreCase)));
 
             if (cmd == null)
-                return Task.FromResult(TypeReaderResult.FromError(CommandError.ObjectNotFound, "Command not found!"));
+            {
+                cmd = cmdsvc.Commands.FirstOrDefault(x => x.CanExecute(ctx) &&
+                    string.Equals(x.Name, input, StringComparison.OrdinalIgnoreCase));
+
+                if (cmd == null)
+                    return Task.FromResult(TypeReaderResult.FromError(CommandError.ObjectNotFound, "Command not found!"));
+                return Task.FromResult(TypeReaderResult.FromSuccess(cmd));
+            }
             return Task.FromResult(TypeReaderResult.FromSuccess(cmd));
         }
     }

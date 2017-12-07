@@ -27,7 +27,7 @@ namespace TamamoSharp.Modules
         [Priority(0)]
         public async Task AllHelp()
         {
-            IEnumerable<ModuleInfo> modules = _cmds.Modules.Where(x => x.CanExecute(Context) &&
+            IEnumerable<ModuleInfo> modules = _cmds.Modules.Where(x => 
                 !string.IsNullOrWhiteSpace(x.Summary));
 
             EmbedBuilder builder = new EmbedBuilder()
@@ -56,8 +56,7 @@ namespace TamamoSharp.Modules
                 !string.IsNullOrWhiteSpace(x.Summary) && x.CanExecute(Context));
 
             EmbedBuilder builder = new EmbedBuilder()
-                .WithFooter(x => x.Text = $"Type {Context.Client.CurrentUser.Mention} "
-                    + $"help <command> for more info!");
+                .WithFooter(x => x.Text = "Type @Tamamo help <command> for more info!");
 
             foreach (CommandInfo cmd in cmds)
                 builder.AddField(cmd.Name, cmd.Summary);
