@@ -43,18 +43,18 @@ namespace TamamoSharp.Modules
 
         [Command("choose"), Name("Choose")]
         [Summary("Tamamo chooses a random option from a comma delimited list.")]
-        public async Task Choose([Remainder] string s)
+        public async Task Choose([Remainder] string choices)
         {
-            string[] choices = s.Split(',');
-            if (choices.Count() <= 1)
+            string[] split = choices.Split(',');
+            if (split.Count() <= 1)
                 await ReplyAsync("Nothing to choose!");
             else
-                await ReplyAsync(choices[_rng.Next(0, choices.Count())]);
+                await ReplyAsync(split[_rng.Next(0, split.Count())]);
         }
 
         [Command("scramble"), Name("Scramble")]
         [Summary("Randomly scrambles a string on a word-by-word basis.")]
-        public async Task Scramble([Remainder] string s)
-            => await ReplyAsync(String.Join(' ', ((s.Split(' ')).OrderBy(x => _rng.Next())).ToArray()));
+        public async Task Scramble([Remainder] string words)
+            => await ReplyAsync(String.Join(' ', ((words.Split(' ')).OrderBy(x => _rng.Next())).ToArray()));
     }
 }

@@ -6,6 +6,7 @@ using Discord;
 using System.Threading.Tasks;
 using System.Reflection;
 using TamamoSharp.Database.GuildConfigs;
+using TamamoSharp.Utils;
 
 namespace TamamoSharp.Services
 {
@@ -34,6 +35,10 @@ namespace TamamoSharp.Services
         public async Task InitializeAsync(IServiceProvider svcprovider)
         {
             _svc = svcprovider;
+
+            _cmds.AddTypeReader<CommandInfo>(new CommandInfoTypeReader());
+            _cmds.AddTypeReader<ModuleInfo>(new ModuleInfoTypeReader());
+
             await _cmds.AddModulesAsync(Assembly.GetEntryAssembly());
         }
 

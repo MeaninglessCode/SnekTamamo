@@ -48,7 +48,7 @@ namespace TamamoSharp.Modules
         }
 
         [Command("me"), Name("QuoteMe"), Alias("m", "self")]
-        [Summary("Quote yourself with the given content")]
+        [Summary("Quote yourself with the given content.")]
         [Priority(10)]
         public async Task QuoteMe(string name, [Remainder] string content)
         {
@@ -70,7 +70,7 @@ namespace TamamoSharp.Modules
         }
 
         [Command("add"), Name("AddQuote"), Alias("a")]
-        [Summary("Add a new quote to the server by passing message IDs.")]
+        [Summary("Add a new quote to the server by passing message IDs separated by a space.")]
         [Priority(10)]
         public async Task AddQuote(string name, [Remainder] string ids)
         {
@@ -180,7 +180,7 @@ namespace TamamoSharp.Modules
             if (user.Nickname != null)
                 authorName += $" (aka {user.Nickname})";
 
-            var e = new EmbedBuilder
+            var builder = new EmbedBuilder
             {
                 Author = new EmbedAuthorBuilder
                 {
@@ -194,7 +194,7 @@ namespace TamamoSharp.Modules
                 Description = q.Content
             };
 
-            await ctx.Channel.SendMessageAsync("", false, e.Build());
+            await ctx.Channel.SendMessageAsync("", embed: builder.Build());
             await _qdb.AddUseAsync(q);
 
             return true;

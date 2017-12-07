@@ -29,41 +29,51 @@ namespace TamamoSharp.Modules
 
         }
 
-        [Group("prune")]
+        [Group("prune"), Name("Prune")]
         [Summary("Several methods of pruning messages from a guild.")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(ChannelPermission.ManageMessages)]
         public class Prune : TamamoModuleBase
         {
-            [Command]
+            [Command, Name("PruneTamamo")]
+            [Summary("Cleans up Tamamo's recent messages in the current channel.")]
             [Priority(0)]
             public async Task PruneSelf(int num = 100)
                 => await DoPrune(Context, x => x.Author == Context.User, num);
 
-            [Command("user")]
+            [Command("user"), Name("PruneUser")]
+            [Summary("Prunes n recent messages from specified user in the current channel.")]
             [Priority(10)]
             public async Task PruneUser(SocketGuildUser user, int num = 100)
                 => await DoPrune(Context, x => x.Author == user, num);
 
-            [Command("all")]
+            [Command("all"), Name("PruneAll")]
+            [Summary("Prunes n most recent messages from the current channel.")]
             [Priority(10)]
             public async Task PruneAll(int num = 100)
                 => await DoPrune(Context, x => true, num);
 
-            [Command("embeds")]
+            [Command("embeds"), Name("PruneEmbeds")]
+            [Summary("Prunes n most recent messages containing embeds in the current channel.")]
             [Priority(10)]
             public async Task PruneEmbeds(int num = 100)
                 => await DoPrune(Context, x => x.Embeds.Count > 0, num);
 
-            [Command("files")]
+            [Command("files"), Name("PruneFiles")]
+            [Summary("Prunes n most recent messages containing files in the current channel.")]
+            [Priority(10)]
             public async Task PruneFiles(int num = 100)
                 => await DoPrune(Context, x => x.Attachments.Count > 0, num);
 
-            [Command("contains")]
+            [Command("contains"), Name("PruneSubstring")]
+            [Summary("Prunes n most recent messages containing the specified substring in the"
+                + "current channel.")]
+            [Priority(10)]
             public async Task PruneSubstring(string subString, int num = 100)
                 => await DoPrune(Context, x => x.Content.Contains(subString), num);
 
-            [Command("bot")]
+            [Command("bot"), Name("PruneBot")]
+            [Summary("Prunes n most recent messages sent by bot users in the current channel.")]
             [Priority(10)]
             public async Task PruneBot(int num = 100)
                 => await DoPrune(Context, x => x.Author.IsBot, num);

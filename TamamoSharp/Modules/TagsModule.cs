@@ -10,6 +10,7 @@ using TamamoSharp.Database.Tags;
 namespace TamamoSharp.Modules
 {
     [Group("tag"), Name("Tag")]
+    [Summary("Commands for creating and managing tagged text.")]
     public class TagsModule : TamamoModuleBase
     {
         private readonly TagDb _tdb;
@@ -19,7 +20,9 @@ namespace TamamoSharp.Modules
             _tdb = tdb;
         }
 
-        [Command]
+        [Command, Name("GetTag")]
+        [Summary("By default, displays the tag with the given name if no subcommands"
+            + "are invoked.")]
         [Priority(0)]
         public async Task GetTag(string name)
         {
@@ -35,7 +38,8 @@ namespace TamamoSharp.Modules
             await ReplyAsync($"**{tag.Name}**:\n{tag.Content}");
         }
 
-        [Command("list"), Alias("l")]
+        [Command("list"), Name("ListTags"), Alias("l")]
+        [Summary("Lists all tags available to the current guild.")]
         [Priority(10)]
         public async Task ListTags()
         {
@@ -63,7 +67,8 @@ namespace TamamoSharp.Modules
             }
         }
 
-        [Command("add"), Alias("a")]
+        [Command("add"), Name("AddTag"), Alias("a")]
+        [Summary("Adds a new tag with the given name and content to the current guild.")]
         [Priority(10)]
         public async Task AddTag(string name, [Remainder] string content)
         {
@@ -86,6 +91,7 @@ namespace TamamoSharp.Modules
         }
 
         [Command("remove"), Alias("r", "d", "delete")]
+        [Summary("Removes an existing tag from the current guild.")]
         [RequireUserPermission(GuildPermission.ManageMessages)]
         [Priority(10)]
         public async Task RemoveTag(string name)
@@ -97,11 +103,13 @@ namespace TamamoSharp.Modules
             else
             {
                 await _tdb.DeleteTagAsync(tag);
-                await DelayDeleteReplyAsync("Tag deleted!", 5);
+                await ReplyAsync("Tag deleted!");
             }
         }
 
-        [Command("alias")]
+        [Command("alias"), Name("Alias")]
+        [Summary("Adds a new alias name to the specified tag in the current guild.")]
+        [Priority(10)]
         public async Task AddAlias(string tagName, string aliasName)
         {
             Tag tag = await _tdb.GetTagAsync(Context.Guild.Id, tagName);
@@ -120,16 +128,36 @@ namespace TamamoSharp.Modules
                 Tag = tag
             });
 
-            await DelayDeleteReplyAsync($"**{tagName}** successfully aliased to **{aliasName}**!", 5);
+            await ReplyAsync($"**{tagName}** successfully aliased to **{aliasName}**!");
         }
 
-        [Command("unalias")]
+        [Command("unalias"), Name("Unalias")]
+        [Summary("Removes an alias name from the specified tag in the current guild.")]
+        [Priority(10)]
         public async Task RemoveAlias(string tagName, string aliasName)
         {
+            Tag tag = await _tdb.GetTagAsync(Context.Guild.Id, tagName);
+            
+            if (tag == null)
+            {
+                await DelayDeleteReplyAsync($"Tag **{tagName}** not found!", 5);
+                return;
+            }
 
+            TagAlias alias = tag.Aliases.SingleOrDefault(x => x.Name.ToLower() == aliasName.ToLower());
+            if (alias == null)
+            {
+                await DelayDeleteReplyAsync($"Tag **{tagName}** has no alias matching **{aliasName}**.", 5);
+                return;
+            }
+
+            await _tdb.DeleteAliasAsync(alias);
+            await ReplyAsync("Alias removed!");
         }
 
-        [Command("info")]
+        [Command("info"), Name("TagInfo")]
+        [Summary("Displays detailed information about the specified tag in the current guild.")]
+        [Priority(10)]
         public async Task TagInfo(string name)
         {
             Tag tag = await _tdb.GetTagAsync(Context.Guild.Id, name);
