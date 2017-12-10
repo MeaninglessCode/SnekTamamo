@@ -261,3 +261,4 @@ __pycache__/
 *.pyc
 
 /TamamoSharp/config.json
+/TamamoSharp/Utils/Database/GuildConfigs/global_ignorelist.json

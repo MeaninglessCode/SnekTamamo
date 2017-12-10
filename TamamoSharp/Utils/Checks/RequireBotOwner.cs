@@ -12,8 +12,6 @@ namespace TamamoSharp
 
         public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider svc)
         {
-            //ulong ownerId = (ulong)(JObject.Parse(File.ReadAllText("config.json"))["owner_id"]);
-
             if (context.User.Id == ownerId)
                 return Task.FromResult(PreconditionResult.FromSuccess());
             else

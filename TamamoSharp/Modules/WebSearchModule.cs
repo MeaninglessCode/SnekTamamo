@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using System.Web;
 using TamamoSharp.Utils;
 
 namespace TamamoSharp.Modules
@@ -27,7 +28,7 @@ namespace TamamoSharp.Modules
         {
             termNum -= 1;
 
-            string url = $"https://api.urbandictionary.com/v0/define?term={term}";
+            string url = $"https://api.urbandictionary.com/v0/define?term={HttpUtility.HtmlEncode(term)}";
             JObject response = await WebHelpers.GetJsonResponseAsync(url);
 
             if (response == null)
@@ -114,7 +115,7 @@ namespace TamamoSharp.Modules
                 if (time != "") url += $"{time}/";
                 if (sort != "" && time != "") url += $"{page.ToString()}/";
 
-                url += $"?q={query}";
+                url += $"?q={HttpUtility.HtmlEncode(query)}";
 
                 WebHeaderCollection headers = new WebHeaderCollection
                 {

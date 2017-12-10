@@ -19,6 +19,7 @@ namespace TamamoSharp.Modules
             => await Context.Client.SetGameAsync(name);
         
         [Command("ginfo")]
+        [RequireContext(ContextType.Guild)]
         public async Task GuildInfo(ulong guildId = 0)
         {
             SocketGuild guild = (guildId == 0)? Context.Guild : Context.Client.GetGuild(guildId);
@@ -26,6 +27,44 @@ namespace TamamoSharp.Modules
             string roleList = string.Join(", ", from role in guild.Roles select role.Name);
             int onlineUsers = guild.Users.Where(x => x.Status == UserStatus.Online).Count();
             int offlineUsers = guild.Users.Where(x => x.Status == UserStatus.Offline).Count();
+            int idleUsers = guild.Users.Where(x => x.Status == UserStatus.Idle).Count();
+
+            EmbedBuilder builder = new EmbedBuilder
+            {
+                Author = new EmbedAuthorBuilder
+                {
+                    IconUrl = guild.IconUrl,
+                    Name = guild.Name
+                },
+                Footer = new EmbedFooterBuilder
+                {
+                    Text = $"Created: {guild.CreatedAt}"
+                },
+                ThumbnailUrl = guild.IconUrl
+            }
+            .AddField(new EmbedFieldBuilder
+            {
+                Name = "Owner",
+                Value = $"{guild.Owner.Username}#{guild.Owner.Discriminator}",
+                IsInline = true
+            })
+            .AddField(new EmbedFieldBuilder
+            {
+                Name = "Region", Value = guild.VoiceRegionId, IsInline = true
+            })
+            .AddField(new EmbedFieldBuilder
+            {
+                Name = "Members",
+                Value = $"{guild.MemberCount}\n(Online: {onlineUsers})\n(Offline: {offlineUsers})"
+                    + $"(Idle: {idleUsers})",
+                IsInline = true
+            })
+            .AddField(new EmbedFieldBuilder
+            {
+                Name = "Roles", Value = roleList, IsInline = false
+            });
+
+            await ReplyAsync("", embed: builder.Build());
 
         }
 
