@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using TamamoSharp.Database.GuildConfigs;
 
 namespace TamamoSharp.Modules
 {
@@ -14,7 +13,7 @@ namespace TamamoSharp.Modules
     public class AdministrationModule : TamamoModuleBase
     {
         [Command("setgame")]
-        [RequireBotOwner]
+        [RequireOwner]
         public async Task SetGame(string name)
             => await Context.Client.SetGameAsync(name);
         
@@ -120,7 +119,7 @@ namespace TamamoSharp.Modules
             private async Task DoPrune(SocketCommandContext ctx, Func<IMessage, bool> expr, int count = 100)
             {
                 ITextChannel channel = ctx.Channel as ITextChannel;
-                IEnumerable<IMessage> toDelete = (await channel.GetMessagesAsync(count).Flatten()).Where(expr);
+                IEnumerable<IMessage> toDelete = (await channel.GetMessagesAsync(count).FlattenAsync()).Where(expr);
 
                 try
                 {
@@ -158,6 +157,7 @@ namespace TamamoSharp.Modules
             }
         }
 
+        /*
         [Group("ignore")]
         public class Ignore : TamamoModuleBase
         {
@@ -169,6 +169,7 @@ namespace TamamoSharp.Modules
             }
 
             [Command("user")]
+            [RequireContext(ContextType.Guild)]
             [RequireUserPermission(GuildPermission.MuteMembers)]
             public async Task IgnoreUser(SocketGuildUser user)
             {
@@ -191,6 +192,7 @@ namespace TamamoSharp.Modules
             }
 
             [Command("channel")]
+            [RequireContext(ContextType.Guild)]
             [RequireUserPermission(GuildPermission.MuteMembers)]
             public async Task IgnoreChannel(SocketGuildChannel channel)
             {
@@ -213,7 +215,7 @@ namespace TamamoSharp.Modules
             }
 
             [Command("guild")]
-            [RequireBotOwner]
+            [RequireOwner]
             public async Task IgnoreGuild(ulong guildId)
             {
                 SocketGuild guild = Context.Client.GetGuild(guildId);
@@ -239,6 +241,7 @@ namespace TamamoSharp.Modules
             }
 
             [Command("user")]
+            [RequireContext(ContextType.Guild)]
             [RequireUserPermission(GuildPermission.MuteMembers)]
             public async Task UnIgnoreUser(SocketGuildUser user)
             {
@@ -254,6 +257,7 @@ namespace TamamoSharp.Modules
             }
 
             [Command("channel")]
+            [RequireContext(ContextType.Guild)]
             [RequireUserPermission(GuildPermission.MuteMembers)]
             public async Task UnIgnoreChannel(SocketGuildChannel channel)
             {
@@ -268,8 +272,22 @@ namespace TamamoSharp.Modules
                 await ReplyAsync($"Channel `#{channel.Name}` unignored!");
             }
 
-        }
+            [Command("guild")]
+            [RequireOwner]
+            public async Task UnignoreGuild(ulong guildId)
+            {
+                SocketGuild guild = Context.Client.GetGuild(guildId);
+                if (guild == null)
+                {
+                    await DelayDeleteReplyAsync("Guild not found!", 5);
+                    return;
+                }
 
+                await _gcdb.UnIgnoreGuildAsync(guildId);
+                await ReplyAsync($"Guild `{guild.Name}({guild.Id})` unignored!");
+            }
+        }
+        */
 
         [Command("kick")]
         [RequireContext(ContextType.Guild)]

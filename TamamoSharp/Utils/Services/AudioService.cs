@@ -9,12 +9,12 @@ namespace TamamoSharp.Services
 {
     public class AudioService
     {
-        private readonly ConcurrentDictionary<ulong, IAudioClient> ConnectedChannels = new ConcurrentDictionary<ulong, IAudioClient>();
+        private readonly ConcurrentDictionary<ulong, IAudioClient> ConnectedChannels =
+            new ConcurrentDictionary<ulong, IAudioClient>();
 
         public async Task JoinAudio(IGuild guild, IVoiceChannel target)
         {
-            IAudioClient client;
-            if (ConnectedChannels.TryGetValue(guild.Id, out client))
+            if (ConnectedChannels.TryGetValue(guild.Id, out IAudioClient client))
             {
                 return;
             }
@@ -35,8 +35,7 @@ namespace TamamoSharp.Services
 
         public async Task LeaveAudio(IGuild guild)
         {
-            IAudioClient client;
-            if (ConnectedChannels.TryRemove(guild.Id, out client))
+            if (ConnectedChannels.TryRemove(guild.Id, out IAudioClient client))
             {
                 await client.StopAsync();
                 //await Log(LogSeverity.Info, $"Disconnected from voice on {guild.Name}.");
@@ -45,14 +44,12 @@ namespace TamamoSharp.Services
 
         public async Task SendAudioAsync(IGuild guild, IMessageChannel channel, string path)
         {
-            // Your task: Get a full path to the file if the value of 'path' is only a filename.
             if (!File.Exists(path))
             {
                 await channel.SendMessageAsync("File does not exist.");
                 return;
             }
-            IAudioClient client;
-            if (ConnectedChannels.TryGetValue(guild.Id, out client))
+            if (ConnectedChannels.TryGetValue(guild.Id, out IAudioClient client))
             {
                 //await Log(LogSeverity.Debug, $"Starting playback of {path} in {guild.Name}");
                 using (var output = CreateStream(path).StandardOutput.BaseStream)

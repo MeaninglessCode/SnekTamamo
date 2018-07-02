@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace TamamoSharp.Database.Tags
+namespace TamamoSharp.Database
 {
     public class Tag
     {
@@ -20,10 +20,8 @@ namespace TamamoSharp.Database.Tags
     public class TagAlias
     {
         public int Id { get; set; }
-        public int TagId { get; set; }
         public string Name { get; set; }
-        public ulong OwnerId { get; set; }
-        public ulong GuildId { get; set; }
+        public int TagId { get; set; }
         public Tag Tag { get; set; }
     }
 }

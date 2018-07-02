@@ -1,14 +1,14 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using TamamoSharp.Database.GuildConfigs;
-using TamamoSharp.Database.Quotes;
-using TamamoSharp.Database.Tags;
+using TamamoSharp.Database;
 using TamamoSharp.Services;
 
 namespace TamamoSharp
@@ -28,27 +28,8 @@ namespace TamamoSharp
                 LogLevel = LogSeverity.Verbose
             });
 
-            _cfg = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("config.json")
-                .Build();
-
-            IServiceProvider svc = new ServiceCollection()
-                .AddSingleton(_client)
-                .AddSingleton(new CommandService(new CommandServiceConfig
-                {
-                    DefaultRunMode = RunMode.Async,
-                    LogLevel = LogSeverity.Verbose
-                }))
-                .AddSingleton(_cfg)
-                .AddSingleton<CommandHandler>()
-                .AddSingleton<Logger>()
-                .AddSingleton<Random>()
-                .AddSingleton<GuildConfigDb>()
-                .AddSingleton<QuoteDb>()
-                .AddSingleton<TagDb>()
-                .AddLogging()
-                .BuildServiceProvider();
+            _cfg = BuildConfiguration();
+            IServiceProvider svc = BuildServiceProvider();
 
             svc.GetRequiredService<Logger>();
             await svc.GetRequiredService<CommandHandler>().InitializeAsync(svc);
@@ -57,6 +38,42 @@ namespace TamamoSharp
             await _client.StartAsync();
 
             await Task.Delay(-1);
+        }
+
+        private IConfiguration BuildConfiguration()
+        {
+            return new ConfigurationBuilder()
+                .SetBasePath(GetConfigRoot())
+                .AddJsonFile("config.json")
+                .Build();
+        }
+
+        private IServiceProvider BuildServiceProvider()
+        {
+            return new ServiceCollection()
+                .AddSingleton(_client)
+                .AddSingleton(new CommandService(new CommandServiceConfig
+                {
+                    DefaultRunMode = RunMode.Async
+                }))
+                .AddSingleton(_cfg)
+                .AddSingleton<CommandHandler>()
+                .AddSingleton<Logger>()
+                .AddSingleton<Random>()
+                .AddDbContextPool<TamamoDbContext>(options =>
+                {
+                    options.UseNpgsql(_cfg["pg_conn_string"]);
+                })
+                .AddSingleton<RoslynService>()
+                .AddLogging()
+                .BuildServiceProvider();
+        }
+
+        public static string GetConfigRoot()
+        {
+            string cwd = Directory.GetCurrentDirectory();
+            bool containsSln = Directory.GetFiles(cwd).Any(f => f.Contains("TamamoSharp.sln"));
+            return (containsSln) ? cwd : Path.GetFullPath(Path.Combine(cwd, @"..\..\..\"));
         }
     }
 }

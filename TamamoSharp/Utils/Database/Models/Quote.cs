@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TamamoSharp.Database.Quotes
+namespace TamamoSharp.Database
 {
     public class Quote
     {

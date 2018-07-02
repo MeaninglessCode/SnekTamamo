@@ -4,7 +4,7 @@ using Discord.WebSocket;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using TamamoSharp.Database.Quotes;
+using TamamoSharp.Database;
 
 namespace TamamoSharp.Modules
 {
@@ -13,19 +13,12 @@ namespace TamamoSharp.Modules
     [RequireContext(ContextType.Guild)]
     public class QuotesModule : TamamoModuleBase
     {
-        private readonly QuoteDb _qdb;
-
-        public QuotesModule(QuoteDb qdb)
-        {
-            _qdb = qdb;
-        }
-
         [Command, Name("GetQuote")]
         [Summary("By default, the quote command shows the quote with the given name.")]
         [Priority(0)]
         public async Task GetQuote(string name)
         {
-            Quote q = await _qdb.GetQuoteAsync(Context.Guild.Id, name);
+            Quote q = await Database.GetQuoteAsync(Context.Guild.Id, name);
 
             if (!(await BuildEmbedAsync(Context, q)))
                 await ReplyAsync("Quote owner not found!");
@@ -36,7 +29,7 @@ namespace TamamoSharp.Modules
         [Priority(10)]
         public async Task ListQuotes()
         {
-            Quote[] quotes = await _qdb.GetQuotesAsync(Context.Guild.Id);
+            Quote[] quotes = await Database.GetAllQuotesAsync(Context.Guild.Id);
 
             if (quotes.Length <= 0)
                 await DelayDeleteReplyAsync("No quotes found for this guild!");
@@ -52,21 +45,21 @@ namespace TamamoSharp.Modules
         [Priority(10)]
         public async Task QuoteMe(string name, [Remainder] string content)
         {
-            if (await _qdb.GetQuoteAsync(Context.Guild.Id, name) != null)
-            {
+            if (await Database.GetQuoteAsync(Context.Guild.Id, name) != null)
                 await DelayDeleteReplyAsync($"A quote with the name **{name}** already exists!", 5);
-            }
-
-            Quote q = new Quote
+            else
             {
-                Name = name,
-                Content = content,
-                OwnerId = Context.Message.Author.Id,
-                GuildId = Context.Guild.Id
-            };
+                Quote q = new Quote
+                {
+                    Name = name,
+                    Content = content,
+                    OwnerId = Context.Message.Author.Id,
+                    GuildId = Context.Guild.Id
+                };
 
-            await _qdb.AddQuoteAsync(q);
-            await DelayDeleteReplyAsync("Quote successfully added!", 5);
+                await Database.AddQuoteAsync(q);
+                await DelayDeleteReplyAsync("Quote successfully added!", 5);
+            }
         }
 
         [Command("add"), Name("AddQuote"), Alias("a")]
@@ -77,74 +70,61 @@ namespace TamamoSharp.Modules
             string[] messageIds = ids.Split(" ");
 
             if (messageIds.Length <= 0)
-            {
-                await DelayDeleteReplyAsync("No IDs found!", 5);
-                return;
-            }
-            else if (await _qdb.GetQuoteAsync(Context.Guild.Id, name) != null)
-            {
+                await DelayDeleteReplyAsync("No IDs detected!", 5);
+            else if(await Database.GetQuoteAsync(Context.Guild.Id, name) != null)
                 await DelayDeleteReplyAsync($"A quote with the name **{name}** already exists!", 5);
-                return;
-            }
             else
             {
                 if (!ulong.TryParse(messageIds[0], out ulong temp))
-                {
                     await ReplyAsync("Invalid message ID given!");
-                    return;
-                }
-
-                IMessage baseMessage = await Context.Channel.GetMessageAsync(temp);
-                ulong authorId = baseMessage.Author.Id;
-                DateTimeOffset baseTime = baseMessage.Timestamp;
-                string quoteContent = "";
-
-                foreach (string id in messageIds)
+                else
                 {
-                    if (!ulong.TryParse(id, out ulong messageId))
-                    {
-                        await DelayDeleteReplyAsync("Invalid message ID given!", 5);
-                        return;
-                    }
-                    else
-                    {
-                        IMessage message = await Context.Channel.GetMessageAsync(messageId);
+                    IMessage baseMessage = await Context.Channel.GetMessageAsync(temp);
+                    ulong authorId = baseMessage.Author.Id;
+                    DateTimeOffset baseTime = baseMessage.Timestamp;
+                    string quoteContent = "";
 
-                        if (message.Author.Id != baseMessage.Author.Id)
+                    foreach (string id in messageIds)
+                    {
+                        if (!ulong.TryParse(id, out ulong messageid))
+                        {
+                            await DelayDeleteReplyAsync("Invalid message ID given!", 5);
+                            return;
+                        }
+                        IMessage message = await Context.Channel.GetMessageAsync(messageid);
+
+                        if (message.Author.Id != authorId)
                         {
                             await DelayDeleteReplyAsync("Inconsistent message author!", 5);
                             return;
                         }
-                        else
+
+                        double timeDifference = Math.Abs((baseTime - message.Timestamp).TotalSeconds);
+
+                        if (timeDifference > 1800)
                         {
-                            double timeDiff = Math.Abs((baseTime - message.Timestamp).TotalSeconds);
-
-                            if (timeDiff > 1800)
-                            {
-                                await DelayDeleteReplyAsync("Message times too far apart!", 5);
-                                return;
-                            }
-                            else
-                                quoteContent += $"\n{message.Content}";
+                            await DelayDeleteReplyAsync("Message times too far apart!", 5);
+                            return;
                         }
+
+                        quoteContent += $"\n{message.Content}";
                     }
 
-                    if (quoteContent.Length > 2000)
-                    {
+                    if (quoteContent.Length > 1900)
                         await DelayDeleteReplyAsync("Quote too long!", 5);
-                        return;
-                    }
-
-                    Quote q = new Quote
+                    else
                     {
-                        Name = name,
-                        Content = quoteContent,
-                        OwnerId = baseMessage.Author.Id,
-                        GuildId = Context.Guild.Id
-                    };
+                        Quote quote = new Quote
+                        {
+                            Name = name,
+                            Content = quoteContent,
+                            OwnerId = authorId,
+                            GuildId = Context.Guild.Id
+                        };
 
-                    await _qdb.AddQuoteAsync(q);
-                    await DelayDeleteReplyAsync("Quote successfully added!", 5);
+                        await Database.AddQuoteAsync(quote);
+                        await DelayDeleteReplyAsync($"Quote **{name}** successfully added!", 5);
+                    }
                 }
             }
         }
@@ -155,13 +135,13 @@ namespace TamamoSharp.Modules
         [Priority(10)]
         public async Task RemoveQuote(string name)
         {
-            Quote q = await _qdb.GetQuoteAsync(Context.Guild.Id, name);
+            Quote q = await Database.GetQuoteAsync(Context.Guild.Id, name);
 
             if (q == null)
                 await DelayDeleteReplyAsync($"Quote **{name}** not found!", 5);
             else
             {
-                await _qdb.DeleteQuoteAsync(q);
+                await Database.DeleteQuoteAsync(q);
                 await DelayDeleteReplyAsync("Quote deleted!", 5);
             }
         }
@@ -195,7 +175,7 @@ namespace TamamoSharp.Modules
             };
 
             await ctx.Channel.SendMessageAsync("", embed: builder.Build());
-            await _qdb.AddUseAsync(q);
+            await Database.AddQuoteUseAsync(q);
 
             return true;
         }

@@ -5,28 +5,27 @@ using System;
 using Discord;
 using System.Threading.Tasks;
 using System.Reflection;
-using TamamoSharp.Database.GuildConfigs;
 using TamamoSharp.Utils;
+using TamamoSharp.Database;
 
 namespace TamamoSharp.Services
 {
     class CommandHandler
     {
         private readonly DiscordSocketClient _client;
-        private readonly GuildConfigDb _gcdb;
         private readonly CommandService _cmds;
         private readonly IConfiguration _cfg;
         private IServiceProvider _svc;
+        private TamamoDbContext _db;
         private int argPos = 0;
 
-        public CommandHandler(IServiceProvider svc, CommandService cmds, DiscordSocketClient client, IConfiguration cfg,
-            GuildConfigDb gcdb)
+        public CommandHandler(IServiceProvider svc, CommandService cmds, DiscordSocketClient client, IConfiguration cfg, TamamoDbContext db)
         {
             _cfg = cfg;
             _cmds = cmds;
             _client = client;
             _svc = svc;
-            _gcdb = gcdb;
+            _db = db;
 
             _client.MessageReceived += MessageReceived;
             _client.GuildAvailable += GuildAvailable;
@@ -51,12 +50,13 @@ namespace TamamoSharp.Services
                 if (!(msg.Channel is SocketDMChannel))
                 {
                     SocketGuildChannel c = (msg.Channel) as SocketGuildChannel;
-                    if (await _gcdb.GuildIgnoredAsync(c.Guild.Id))
+
+                    if (await _db.IsGuildIgnoredAsync(c.Guild.Id))
                         return;
-                    else if (await _gcdb.ChannelIgnoredAsync(c.Guild.Id, c.Id))
+                    else if (await _db.IsChannelIgnoredAsync(c.Id))
                         return;
-                    else if (await _gcdb.UserIgnoredAsync(c.Guild.Id, msg.Author.Id))
-                        return;
+                    //else if (await _db.UserIgnoredAsync(c.Guild.Id, msg.Author.Id))
+                    //    return;
                 }
                 
                 SocketCommandContext ctx = new SocketCommandContext(_client, msg);
@@ -80,14 +80,22 @@ namespace TamamoSharp.Services
 
         public async Task GuildAvailable(SocketGuild guild)
         {
-            GuildConfig gc = await _gcdb.GetGuildConfigAsync(guild.Id);
+            GuildConfig gc = await _db.GetGuildConfigAsync(guild.Id);
             if (gc == null)
             {
-                gc = new GuildConfig
+                await _db.AddGuildConfigAsync(new GuildConfig
                 {
                     GuildId = guild.Id
-                };
-                await _gcdb.AddGuildAsync(gc);
+                });
+
+                foreach (IGuildChannel ch in guild.Channels)
+                {
+                    await _db.AddChannelConfigAsync(new ChannelConfig
+                    {
+                        ChannelId = ch.Id,
+                        GuildId = guild.Id
+                    });
+                }
             }
         }
     }
