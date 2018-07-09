@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -10,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TamamoSharp.Database;
 using TamamoSharp.Services;
+using TamamoSharp.Services.Logging;
 
 namespace TamamoSharp
 {
@@ -29,10 +29,11 @@ namespace TamamoSharp
             });
 
             _cfg = BuildConfiguration();
-            IServiceProvider svc = BuildServiceProvider();
+            IServiceProvider svc = await BuildServiceProvider();
 
-            svc.GetRequiredService<Logger>();
-            await svc.GetRequiredService<CommandHandler>().InitializeAsync(svc);
+            svc.GetRequiredService<LoggingService>();
+            svc.GetRequiredService<EventHandlerService>();
+            await svc.GetRequiredService<CommandHandlerService>().InitializeAsync(svc);
 
             await _client.LoginAsync(TokenType.Bot, _cfg["tokens:discord"]);
             await _client.StartAsync();
@@ -48,24 +49,26 @@ namespace TamamoSharp
                 .Build();
         }
 
-        private IServiceProvider BuildServiceProvider()
+        private async Task<IServiceProvider> BuildServiceProvider()
         {
+            TamamoDb tamamoDb = new TamamoDb(_cfg["pg_conn_string"]);
+            await tamamoDb.EnsureDbCreated();
+
             return new ServiceCollection()
                 .AddSingleton(_client)
                 .AddSingleton(new CommandService(new CommandServiceConfig
                 {
                     DefaultRunMode = RunMode.Async
                 }))
-                .AddSingleton(_cfg)
-                .AddSingleton<CommandHandler>()
-                .AddSingleton<Logger>()
-                .AddSingleton<Random>()
-                .AddDbContextPool<TamamoDbContext>(options =>
-                {
-                    options.UseNpgsql(_cfg["pg_conn_string"]);
-                })
-                .AddSingleton<RoslynService>()
+                .AddSingleton<CommandHandlerService>()
                 .AddLogging()
+                .AddSingleton<LoggingService>()
+                .AddSingleton(tamamoDb)
+                .AddSingleton(_cfg)
+                .AddSingleton<Random>()
+                .AddSingleton<StarboardService>()
+                .AddSingleton<EventHandlerService>()
+                .AddSingleton<RoslynService>()
                 .BuildServiceProvider();
         }
 

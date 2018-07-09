@@ -7,7 +7,7 @@ namespace TamamoSharp.Modules
 {
     public class TamamoModuleBase : ModuleBase<SocketCommandContext>
     {
-        public TamamoDbContext Database { get; set; }
+        public TamamoDb Database { get; set; }
 
         public async Task DelayDeleteReplyAsync(string message, int seconds = 1, bool isTTS = false,
             Embed embed = null, RequestOptions options = null)

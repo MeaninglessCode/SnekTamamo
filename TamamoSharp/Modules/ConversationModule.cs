@@ -1,10 +1,12 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using TamamoSharp.Utils;
+using TamamoSharp.Database;
 
 namespace TamamoSharp.Modules
 {
@@ -13,12 +15,12 @@ namespace TamamoSharp.Modules
     public class ConversationModule : TamamoModuleBase
     {
         private readonly Random _rng;
-        private readonly ulong ownerId;
+        private readonly ulong _ownerId;
 
         public ConversationModule(IServiceProvider svc)
         {
             _rng = svc.GetService<Random>();
-            ownerId = ulong.Parse((svc.GetService<IConfiguration>())["owner_id"]);
+            _ownerId = ulong.Parse((svc.GetService<IConfiguration>())["owner_id"]);
         }
 
         [Command("say"), Name("Say")]
@@ -28,9 +30,21 @@ namespace TamamoSharp.Modules
 
         [Command("test"), Name("Test")]
         [RequireOwner]
-        public async Task TestCommand()
+        public async Task TestCommand(string input)
         {
-            await ReplyAsync($"Count: {Database.GuildConfigs.Count().ToString()}");
+            bool test = false;
+
+            try
+            {
+                //test = await Database.TagDataExistsAsync(Context.Guild.Id, input);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Exception: {e.Message}");
+            }
+            
+
+            await ReplyAsync($"Result: {test.ToString()}");
         }
 
         [Command("roll"), Name("Roll")]
@@ -51,7 +65,7 @@ namespace TamamoSharp.Modules
         [Command("size"), Name("Size")]
         [Summary("Tamamo choose a random size from 1-32 cm. ( ͡° ͜ʖ ͡°)")]
         public async Task Size()
-            => await ReplyAsync((Context.Message.Author.Id == ownerId)
+            => await ReplyAsync((Context.Message.Author.Id == _ownerId)
                 ? "32 cm. ( ͡° ͜ʖ ͡°)"
                 : $"{_rng.Next(0, 31)} cm.");
 

@@ -1,57 +1,68 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace TamamoSharp.Services
+namespace TamamoSharp.Services.Logging
 {
-    public class Logger
+    public class LoggingService
     {
         private readonly DiscordSocketClient _client;
-        private readonly CommandService _cmds;
+        private readonly CommandService _cmdsvc;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _discordLogger;
+        private readonly ILogger _cmdLogger;
 
-        public Logger(DiscordSocketClient client, CommandService cmds)
+        public LoggingService(DiscordSocketClient client, CommandService cmdsvc, ILoggerFactory loggerFactory)
         {
             _client = client;
-            _cmds = cmds;
+            _cmdsvc = cmdsvc;
 
-            _client.Log += LogAsync;
-            _client.MessageReceived += LogMessageAsync;
-            _cmds.Log += LogAsync;
+            _loggerFactory = ConfigureLogger(loggerFactory);
+            _discordLogger = _loggerFactory.CreateLogger("discord");
+            _cmdLogger = _loggerFactory.CreateLogger("cmd");
+
+            _client.Log += LogDiscord;
+            _cmdsvc.Log += LogCommand;
         }
 
-        public Task LogAsync(LogMessage msg)
+        private ILoggerFactory ConfigureLogger(ILoggerFactory factory)
         {
-            Console.OutputEncoding = Encoding.Unicode;
-            StringBuilder output = new StringBuilder();
+            factory.AddConsole();
+            return factory;
+        }
 
-            output.Append($"[{DateTime.Now.ToString("hh:mm:ss")}] ");
-            output.Append($"({msg.Source}) {msg.Message}");
-
-            Console.Out.WriteLineAsync(output.ToString());
+        private Task LogDiscord(LogMessage message)
+        {
+            _discordLogger.Log(LogLevelFromSeverity(message.Severity),
+                0,
+                message,
+                message.Exception,
+                (_1, _2) => message.ToString());
             return Task.CompletedTask;
         }
 
-        public Task LogMessageAsync(SocketMessage msg)
+        private Task LogCommand(LogMessage message)
         {
-            if (msg.Author == _client.CurrentUser)
-                return Task.CompletedTask;
+            // Return an error message for async commands
+            if (message.Exception is CommandException command)
+            {
+                // Don't risk blocking the logging task by awaiting a message send; ratelimits!?
+                var _ = command.Context.Channel.SendMessageAsync($"Error: {command.Message}");
+            }
 
-            Console.OutputEncoding = Encoding.Unicode;
-            StringBuilder output = new StringBuilder();
-            
-            output.Append($"[{DateTime.Now.ToString("hh:mm:ss")}] ");
-
-            if (msg.Channel is IDMChannel)
-                output.Append($"({msg.Source}) <Direct> ");
-            else if (msg.Channel is ITextChannel)
-                output.Append($"({msg.Source}) <{(msg.Channel as ITextChannel).Guild.Name}#{msg.Channel.Name}> ");
-            output.Append($"({msg.Author.Username}#{msg.Author.Discriminator}): {msg.Content}");
-
-            Console.Out.WriteLineAsync(output.ToString());
+            _cmdLogger.Log(
+                LogLevelFromSeverity(message.Severity),
+                0,
+                message,
+                message.Exception,
+                (_1, _2) => message.ToString(prependTimestamp: false));
             return Task.CompletedTask;
         }
+
+        private static LogLevel LogLevelFromSeverity(LogSeverity severity)
+            => (LogLevel)(Math.Abs((int)severity - 5));
     }
 }
